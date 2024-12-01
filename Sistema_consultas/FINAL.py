@@ -55,6 +55,8 @@ class Consulta:
 usuarios = {
     "profesor1@mail.com": Profesor("Prof. Juan", "profesor1@mail.com", "pass123", "P1"),
     "estudiante1@mail.com": Estudiante("Est. Ana", "estudiante1@mail.com", "pass456", "E1"),
+    "profesor2": Profesor("Prof. Juan", "profesor1@mail.com", "123", "P1"),
+    "estudiante2": Estudiante("Est. Ana", "estudiante1@mail.com", "456", "E1")
 }
 
 horarios = [
@@ -76,13 +78,32 @@ class SistemaConsultas:
 
     def mostrar_pantalla_login(self):
         self.limpiar_pantalla()
+        '''
         tk.Label(self.root, text="Correo").pack()
         self.email_entry = tk.Entry(self.root)
         self.email_entry.pack()
+        '''
+        
+        self.frame_login = tk.Frame(self.root)
+        self.frame_login.pack(padx=10, pady=10)
+        
+        self.label_email = tk.Label(self.frame_login, text="Correo Electrónico:")
+        self.label_email.grid(row=0, column=0, padx=5, pady=5)
+        
+        self.email_entry = tk.Entry(self.frame_login)
+        self.email_entry.grid(row=0, column=1, padx=5, pady=5)
 
+        '''
         tk.Label(self.root, text="Contraseña").pack()
         self.password_entry = tk.Entry(self.root, show="*")
         self.password_entry.pack()
+        '''
+        
+        self.label_pass = tk.Label(self.frame_login, text="Contraseña:")
+        self.label_pass.grid(row=1, column=0, padx=5, pady=5)
+
+        self.password_entry = tk.Entry(self.frame_login, show="*")
+        self.password_entry.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Button(self.root, text="Iniciar Sesión", command=self.autenticar).pack()
 
@@ -102,17 +123,28 @@ class SistemaConsultas:
 
     def mostrar_menu_profesor(self):
         self.limpiar_pantalla()
-        tk.Label(self.root, text=f"Bienvenido, {self.usuario_actual.nombre}").pack()
-        tk.Button(self.root, text="Registrar Horario", command=self.registrar_horario).pack()
-        tk.Button(self.root, text="Gestionar Consultas", command=self.gestionar_consultas).pack()
-        tk.Button(self.root, text="Cerrar Sesión", command=self.mostrar_pantalla_login).pack()
+
+        label = tk.Label(self.root, text=f"Bienvenido, {self.usuario_actual.nombre}", font=("Arial", 16))
+        label.pack(pady=10)
+        #tk.Label(self.root, text=f"Bienvenido, {self.usuario_actual.nombre}").pack()
+        tk.Button(self.root, text="Ver Notificaciones", command=self.ver_notificaciones_profesor).pack(pady= 5)
+        tk.Button(self.root, text="Ver Consultas", command=self.gestionar_consultas).pack(pady= 5)
+        tk.Button(self.root, text="Registrar Horario", command=self.registrar_horario).pack(pady= 5)
+        tk.Button(self.root, text="Ver horarios disponibles", command=self.ver_horarios).pack(pady= 5)
+        tk.Button(self.root, text="Modificar horario", command=self.modificar_horario).pack(pady= 5)
+        tk.Button(self.root, text="Cerrar Sesión", command=self.mostrar_pantalla_login).pack(pady= 5)
 
     def mostrar_menu_estudiante(self):
         self.limpiar_pantalla()
-        tk.Label(self.root, text=f"Bienvenido, {self.usuario_actual.nombre}").pack()
-        tk.Button(self.root, text="Solicitar Consulta", command=self.solicitar_consulta).pack()
-        tk.Button(self.root, text="Ver Notificaciones", command=self.ver_notificaciones).pack()
-        tk.Button(self.root, text="Cerrar Sesión", command=self.mostrar_pantalla_login).pack()
+        
+        label = tk.Label(self.root, text=f"Bienvenido, {self.usuario_actual.nombre}", font=("Arial", 16))
+        label.pack(pady=10)
+        #tk.Label(self.root, text=f"Bienvenido, {self.usuario_actual.nombre}").pack()
+        tk.Button(self.root, text="Solicitar Consulta", command=self.solicitar_consulta).pack(pady= 5)
+        tk.Button(self.root, text="Ver Notificaciones", command=self.ver_notificaciones).pack(pady= 5)
+        tk.Button(self.root, text="Ver horarios disponibles", command=self.mostrar_horarios).pack(pady= 5)
+        tk.Button(self.root, text="Modificar o Cancelar consulta", command=self.modificar_consulta).pack(pady= 5)
+        tk.Button(self.root, text="Cerrar Sesión", command=self.mostrar_pantalla_login).pack(pady= 5)
 
     def registrar_horario(self):
         self.limpiar_pantalla()
@@ -223,19 +255,24 @@ class SistemaConsultas:
             self.limpiar_pantalla()
             tk.Label(self.root, text=f"Consulta {consulta.id_consulta} - Estado actual: {consulta.estado}").pack()
 
-            estado_var = tk.StringVar(value=consulta.estado)
-            opciones = ["aprobar", "rechazar"]
+            if consulta.estado != "cancelar" and consulta.estado != "rechazar":
+                estado_var = tk.StringVar(value=consulta.estado)
+                opciones = ["aprobar", "rechazar"]
 
-            # Agregar opción de cancelar si la consulta ya está aprobada
-            if consulta.estado == "aprobada":
-                opciones.append("cancelar")
+                # Agregar opción de cancelar si la consulta ya está aprobada
+                if consulta.estado == "aprobada":
+                    opciones.append("cancelar")
+                    opciones.remove("rechazar")
 
-            tk.Label(self.root, text="Seleccione el nuevo estado:").pack()
-            for opcion in opciones:
-                tk.Radiobutton(self.root, text=opcion.capitalize(), variable=estado_var, value=opcion).pack()
+                tk.Label(self.root, text="Seleccione el nuevo estado:").pack()
+                for opcion in opciones:
+                    tk.Radiobutton(self.root, text=opcion.capitalize(), variable=estado_var, value=opcion).pack()
 
-            tk.Button(self.root, text="Actualizar", command=lambda: self.guardar_nuevo_estado(consulta, estado_var.get())).pack()
-            tk.Button(self.root, text="Volver", command=self.mostrar_menu_profesor).pack()
+                tk.Button(self.root, text="Actualizar", command=lambda: self.guardar_nuevo_estado(consulta, estado_var.get())).pack()
+                tk.Button(self.root, text="Volver", command=self.mostrar_menu_profesor).pack()
+            else:
+                messagebox.showerror("Error", "La consulta ya ha sido cancelada")
+                self.mostrar_menu_profesor()
         else:
             messagebox.showerror("Error", "Consulta no encontrada")
             self.mostrar_menu_profesor()
@@ -266,6 +303,147 @@ class SistemaConsultas:
         consulta.estado = nuevo_estado
         messagebox.showinfo("Éxito", f"Consulta {consulta.id_consulta} actualizada a '{nuevo_estado}'")
         self.mostrar_menu_profesor()
+       
+    '''    
+    def ver_horarios(self):
+        
+    def modificar_horario(self):
+        
+    def ver_notificaciones_profesor(self):
+        
+    def mostrar_horarios(self):
+        
+    def modificar_consulta(self):
+    '''
+    
+    def ver_horarios(self):
+        """Muestra los horarios registrados por el profesor."""
+        self.limpiar_pantalla()
+        tk.Label(self.root, text="Horarios Registrados:").pack()
+
+        if not self.usuario_actual.horarios:
+            tk.Label(self.root, text="No tiene horarios registrados").pack()
+        else:
+            for horario in self.usuario_actual.horarios:
+                estado = "Disponible" if horario.disponible else "Ocupado"
+                tk.Label(self.root, text=f"{horario.id_horario}: {horario.fecha}, {horario.hora_inicio}-{horario.hora_final} ({estado})").pack()
+
+        tk.Button(self.root, text="Volver", command=self.mostrar_menu_profesor).pack()
+
+    def modificar_horario(self):
+        """Permite al profesor modificar uno de sus horarios registrados."""
+        self.limpiar_pantalla()
+        tk.Label(self.root, text="Seleccione un horario disponible:").pack()
+        for horario in horarios:
+            if horario.disponible:
+                tk.Label(self.root, text=f"{horario.id_horario}: {horario.fecha} de {horario.hora_inicio} a {horario.hora_final}").pack()
+
+        tk.Label(self.root, text="Ingrese ID del horario a modificar:").pack()
+        self.id_horario_modificar_entry = tk.Entry(self.root)
+        self.id_horario_modificar_entry.pack()
+        tk.Button(self.root, text="Modificar", command=self.interfaz_modificar_horario).pack()
+        tk.Button(self.root, text="Volver", command=self.mostrar_menu_profesor).pack()
+
+    def interfaz_modificar_horario(self):
+        """Muestra la interfaz para modificar los detalles de un horario específico."""
+        id_horario = self.id_horario_modificar_entry.get()
+        horario = next((h for h in self.usuario_actual.horarios if h.id_horario == id_horario), None)
+
+        if horario:
+            self.limpiar_pantalla()
+            tk.Label(self.root, text=f"Modificando {horario.id_horario}").pack()
+
+            tk.Label(self.root, text="Nueva Fecha (YYYY-MM-DD):").pack()
+            nueva_fecha = tk.Entry(self.root)
+            nueva_fecha.insert(0, horario.fecha)
+            nueva_fecha.pack()
+
+            tk.Label(self.root, text="Nueva Hora Inicio (HH:MM):").pack()
+            nueva_hora_inicio = tk.Entry(self.root)
+            nueva_hora_inicio.insert(0, horario.hora_inicio)
+            nueva_hora_inicio.pack()
+
+            tk.Label(self.root, text="Nueva Hora Final (HH:MM):").pack()
+            nueva_hora_final = tk.Entry(self.root)
+            nueva_hora_final.insert(0, horario.hora_final)
+            nueva_hora_final.pack()
+
+            tk.Button(self.root, text="Guardar Cambios", command=lambda: self.guardar_cambios_horario(horario, nueva_fecha.get(), nueva_hora_inicio.get(), nueva_hora_final.get())).pack()
+            tk.Button(self.root, text="Volver", command=self.mostrar_menu_profesor).pack()
+        else:
+            messagebox.showerror("Error", "ID de horario no encontrado")
+            self.mostrar_menu_profesor()
+
+    def guardar_cambios_horario(self, horario, nueva_fecha, nueva_hora_inicio, nueva_hora_final):
+        """Guarda los cambios realizados a un horario específico."""
+        horario.fecha = nueva_fecha
+        horario.hora_inicio = nueva_hora_inicio
+        horario.hora_final = nueva_hora_final
+        messagebox.showinfo("Éxito", f"Horario {horario.id_horario} modificado con éxito")
+        self.mostrar_menu_profesor()
+
+    def ver_notificaciones_profesor(self):
+        """Muestra las notificaciones de consultas para el profesor."""
+        self.limpiar_pantalla()
+        tk.Label(self.root, text="Notificaciones de Consultas:").pack()
+
+        consultas_asociadas = [c for c in consultas if c.profesor == self.usuario_actual.nombre]
+        if not consultas_asociadas:
+            tk.Label(self.root, text="No hay notificaciones").pack()
+        else:
+            for consulta in consultas_asociadas:
+                tk.Label(self.root, text=f"Consulta {consulta.id_consulta}: {consulta.estado}").pack()
+
+        tk.Button(self.root, text="Volver", command=self.mostrar_menu_profesor).pack()
+
+    def mostrar_horarios(self):
+        """Muestra los horarios disponibles para los estudiantes."""
+        self.limpiar_pantalla()
+        tk.Label(self.root, text="Horarios Disponibles:").pack()
+
+        horarios_disponibles = [h for h in horarios if h.disponible]
+        if not horarios_disponibles:
+            tk.Label(self.root, text="No hay horarios disponibles").pack()
+        else:
+            for horario in horarios_disponibles:
+                tk.Label(self.root, text=f"{horario.id_horario}: {horario.fecha} de {horario.hora_inicio} a {horario.hora_final}").pack()
+
+        tk.Button(self.root, text="Volver", command=self.mostrar_menu_estudiante).pack()
+
+    def modificar_consulta(self):
+        """Permite al estudiante modificar o cancelar una consulta."""
+        self.limpiar_pantalla()
+        tk.Label(self.root, text="Gestión de Consultas:").pack()
+        for consulta in consultas:
+            if consulta.alumno == self.usuario_actual.nombre:
+                tk.Label(self.root, text=f"Consulta {consulta.id_consulta} - Estado: {consulta.estado}").pack()
+        
+        tk.Label(self.root, text="Ingrese ID de la consulta a modificar o cancelar:").pack()
+        self.id_consulta_modificar_entry = tk.Entry(self.root)
+        self.id_consulta_modificar_entry.pack()
+        tk.Button(self.root, text="Continuar", command=self.interfaz_modificar_consulta).pack()
+        tk.Button(self.root, text="Volver", command=self.mostrar_menu_estudiante).pack()
+
+    def interfaz_modificar_consulta(self):
+        """Interfaz para modificar o cancelar una consulta."""
+        id_consulta = self.id_consulta_modificar_entry.get()
+        consulta = next((c for c in self.usuario_actual.consultas if c.id_consulta == id_consulta), None)
+
+        if consulta:
+            self.limpiar_pantalla()
+            tk.Label(self.root, text=f"Modificando Consulta {consulta.id_consulta}").pack()
+
+            if consulta.estado == "aprobar":
+                tk.Label(self.root, text="Cancelar la consulta:").pack()
+                tk.Button(self.root, text="Confirmar Cancelación", command=lambda: self.cancelar_consulta(consulta)).pack()
+            else:
+                tk.Label(self.root, text="Modificaciones permitidas solo para consultas aprobadas.").pack()
+
+            tk.Button(self.root, text="Volver", command=self.mostrar_menu_estudiante).pack()
+        else:
+            messagebox.showerror("Error", "ID de consulta no encontrado")
+            self.mostrar_menu_estudiante()
+
 
     def limpiar_pantalla(self):
         for widget in self.root.winfo_children():
